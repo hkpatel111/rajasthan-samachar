@@ -27,7 +27,7 @@ jobs:
       - name: Find zip file
         id: findzip
         run: |
-          ZIP_FILE=$(find . -name "*.zip" - head -1)
+          ZIP_FILE=$(find . -name "*.zip" | head -1)
           echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
           echo "Found: $ZIP_FILE"
 
