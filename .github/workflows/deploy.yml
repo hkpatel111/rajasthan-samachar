@@ -27,7 +27,7 @@ jobs:
       - name: Find zip file
         id: findzip
         run: |
-          ZIP_FILE=$(find . -name "*.zip" | head -1)
+          ZIP_FILE=$(find . -name "*.zip" - head -1)
           echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
           echo "Found: $ZIP_FILE"
 
@@ -54,7 +54,9 @@ jobs:
           ls -la _site/
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
