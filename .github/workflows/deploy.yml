@@ -1,0 +1,67 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find zip file
+        id: findzip
+        run: |
+          ZIP_FILE=$(find . -name "*.zip" | head -1)
+          echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
+          echo "Found: $ZIP_FILE"
+
+      - name: Unzip and prepare
+        run: |
+          ZIP_FILE="${{ steps.findzip.outputs.zip_file }}"
+          mkdir -p _site
+          if [ -n "$ZIP_FILE" ]; then
+            unzip -o "$ZIP_FILE" -d _site_tmp
+            APP_DIR=$(find _site_tmp -name "index.html" -exec dirname {} \; | head -1)
+            if [ -n "$APP_DIR" ]; then
+              cp -r "$APP_DIR"/* _site/
+            else
+              cp -r _site_tmp/* _site/
+            fi
+            rm -rf _site_tmp
+          else
+            cp -r *.html *.json *.js _site/ 2>/dev/null || true
+          fi
+          if [ ! -f "_site/index.html" ]; then
+            echo "ERROR: index.html not found!"
+            exit 1
+          fi
+          ls -la _site/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        
